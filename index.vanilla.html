@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Fixed Top Navigation Bar -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="logo">CRM</div>
+            <nav class="quick-access">
+                <a href="#clients" class="quick-access-link">Clients</a>
+                <a href="#leads" class="quick-access-link" id="quickAccessLeads">Leads</a>
+                <a href="#opportunities" class="quick-access-link">Opportunities</a>
+                <a href="#quotation" class="quick-access-link">Quotation</a>
+            </nav>
+        </div>
+        <div class="topbar-center">
+            <select class="company-dropdown">
+                <option>Dahlia Technologies Pvt. Ltd.</option>
+            </select>
+        </div>
+        <div class="topbar-right">
+            <div class="notification-icon">🔔</div>
+            <select class="language-dropdown">
+                <option>English</option>
+            </select>
+            <div class="user-avatar"></div>
+        </div>
+    </header>
+
+    <!-- Fixed Left Sidebar -->
+    <aside class="sidebar sidebar--expanded">
+        <div class="sidebar-header">
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Collapse sidebar">
+                <span class="toggle-icon">☰</span>
+            </button>
+            <div class="sidebar-title">Dashboard</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+
+            <div class="nav-group">
+                <div class="nav-item nav-parent" data-group="masters">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">Masters</span>
+                    <span class="nav-arrow">▶</span>
+                </div>
+                <div class="nav-children" id="masters">
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Employee Master</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">General Master</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Finance Master</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-item nav-parent" data-group="business">
+                    <span class="nav-icon">🏢</span>
+                    <span class="nav-label">Business Network</span>
+                    <span class="nav-arrow">▶</span>
+                </div>
+                <div class="nav-children" id="business">
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Vendors</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Clients</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-item nav-parent" data-group="sales">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-label">Sales & Growth</span>
+                    <span class="nav-arrow">▶</span>
+                </div>
+                <div class="nav-children" id="sales">
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Leads</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Opportunities</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Quotation</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">SO</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-item nav-parent" data-group="marketing">
+                    <span class="nav-icon">📢</span>
+                    <span class="nav-label">Marketing</span>
+                    <span class="nav-arrow">▶</span>
+                </div>
+                <div class="nav-children" id="marketing">
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Marketing Zone</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Email Templates</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Signature Zone</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Sample Zone</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-item nav-parent" data-group="operations">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-label">Operations</span>
+                    <span class="nav-arrow">▶</span>
+                </div>
+                <div class="nav-children" id="operations">
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Requisition</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">PO</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Operation Files</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Visiting Report</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-item nav-parent" data-group="finance">
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-label">Finance</span>
+                    <span class="nav-arrow">▶</span>
+                </div>
+                <div class="nav-children" id="finance">
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Invoice</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-item nav-parent" data-group="documents">
+                    <span class="nav-icon">📄</span>
+                    <span class="nav-label">Documents & Communication</span>
+                    <span class="nav-arrow">▶</span>
+                </div>
+                <div class="nav-children" id="documents">
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Document</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Conversations</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-item nav-parent" data-group="tasks">
+                    <span class="nav-icon">✓</span>
+                    <span class="nav-label">Tasks & Planning</span>
+                    <span class="nav-arrow">▶</span>
+                </div>
+                <div class="nav-children" id="tasks">
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Task Management</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Events</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-item nav-parent" data-group="customization">
+                    <span class="nav-icon">🔧</span>
+                    <span class="nav-label">Customization</span>
+                    <span class="nav-arrow">▶</span>
+                </div>
+                <div class="nav-children" id="customization">
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Custom Fields</span>
+                    </a>
+                    <a href="#" class="nav-item nav-child">
+                        <span class="nav-label">Templates</span>
+                    </a>
+                </div>
+            </div>
+
+            <a href="#" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="powered-by">POWERED BY</div>
+            <div class="company-logo">DAHLIA TECHNOLOGIES PTE. LTD.</div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Sales Conversion Funnel Section -->
+        <section class="funnel-section">
+            <!-- Header Row: Greeting + Controls -->
+            <div class="funnel-header-row">
+                <h2 class="welcome-greeting">Welcome, Arabinda Mahapatra</h2>
+                <div class="controls-group">
+                    <div class="time-filter">
+                        <button class="time-filter-btn active" data-range="all">All Time</button>
+                        <button class="time-filter-btn" data-range="month">1 Month</button>
+                        <button class="time-filter-btn" data-range="custom">Custom</button>
+                    </div>
+                    <button class="ai-integrations-btn">Leela AI Integrations ✨</button>
+                </div>
+            </div>
+
+            <!-- Metrics Row: Full Width Connected Container -->
+            <div class="funnel-metrics-connected">
+                <div class="metric-block">
+                    <svg class="sparkline" id="sparklineConversion" viewBox="0 0 80 32"></svg>
+                    <div class="metric-content">
+                        <div class="metric-label">Overall Conversion Rate</div>
+                        <div class="metric-value" id="conversionRateValue">12.0%</div>
+                        <div class="metric-subtext" id="conversionRateChange">+2% vs Last Month</div>
+                    </div>
+                    <div class="metric-icon" style="background-color: #e3f2fd;">
+                        <span>📊</span>
+                    </div>
+                </div>
+                <div class="metric-block">
+                    <svg class="sparkline" id="sparklinePipeline" viewBox="0 0 80 32"></svg>
+                    <div class="metric-content">
+                        <div class="metric-label">Total Pipeline Value</div>
+                        <div class="metric-value" id="pipelineValue">$450K</div>
+                        <div class="metric-subtext" id="pipelineChange">+8% This Month</div>
+                    </div>
+                    <div class="metric-icon" style="background-color: #e8f5e9;">
+                        <span>💰</span>
+                    </div>
+                </div>
+                <div class="metric-block">
+                    <svg class="sparkline" id="sparklineOpportunities" viewBox="0 0 80 32"></svg>
+                    <div class="metric-content">
+                        <div class="metric-label">Active Opportunities</div>
+                        <div class="metric-value" id="activeOpportunitiesValue">175</div>
+                        <div class="metric-subtext" id="activeOpportunitiesSubtext">$1.2M Value</div>
+                    </div>
+                    <div class="metric-icon" style="background-color: #fff3e0;">
+                        <span>🎯</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Row: 50/50 Funnel + Activities -->
+            <div class="funnel-main-grid">
+                <div class="funnel-left-card card">
+                    <h3 class="card-title">Sales Conversion Funnel</h3>
+                    <div class="funnel-canvas-wrapper">
+                        <canvas id="funnelChart"></canvas>
+                    </div>
+                </div>
+                <div class="funnel-right-card card">
+                    <h3 class="card-title">Recent Employee Activities (Last 72 Hours)</h3>
+                    <div class="activities-list" id="activitiesList">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Row: Opportunity Analysis + Leads By Source (2-column) -->
+        <div class="bottom-row-grid" id="leads">
+            <!-- Opportunity Analysis -->
+            <div class="card opportunity-card">
+                <h3 class="card-title">Opportunity Analysis</h3>
+                <div class="donut-chart-wrapper">
+                    <canvas id="donutChart"></canvas>
+                    <div class="donut-center-text">
+                        <div class="donut-value">500</div>
+                        <div class="donut-label">Total Leads</div>
+                    </div>
+                </div>
+                <div id="donutLegend" class="chart-legend"></div>
+            </div>
+
+            <!-- Leads By Source -->
+            <div class="card leads-source-card">
+                <div class="card-header">
+                    <h3 class="card-title">Leads By Source</h3>
+                </div>
+                <div class="lbs-wrap">
+                    <div class="lbs-chart" id="lbsPlot">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leads Filtered Panel (shown when drill-down active) -->
+        <div class="leads-filtered-panel" id="leadsFilteredPanel" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Leads (Filtered: <span id="filterLabel">Closed Won</span>)</h3>
+                    <button class="clear-filter-btn" id="clearFilterBtn">Clear Filter</button>
+                </div>
+                <div class="filtered-leads-list" id="filteredLeadsList">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
