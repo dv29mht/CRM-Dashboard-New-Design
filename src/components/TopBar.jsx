@@ -38,7 +38,7 @@ export default function TopBar() {
           <span>English</span>
           <ChevronDown size={12} />
         </div>
-        <div className="w-9 h-9 rounded-full bg-sky-400 flex items-center justify-content text-white font-semibold text-sm cursor-pointer">
+        <div className="w-9 h-9 rounded-full bg-sky-400 flex items-center justify-center text-white font-semibold text-sm cursor-pointer">
           DM
         </div>
       </div>

@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Map marker animations (SVG-compatible) ───────────────────────── */
+@keyframes svg-glow {
+  0%, 100% { opacity: 0.35; r: 10; }
+  50%      { opacity: 0.65; r: 14; }
+}
+@keyframes svg-ping {
+  0%   { opacity: 0.6; r: 6; }
+  100% { opacity: 0;   r: 28; }
+}
+
+.marker-glow-anim {
+  animation: svg-glow 2.5s ease-in-out infinite;
+}
+.marker-ping-anim {
+  animation: svg-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

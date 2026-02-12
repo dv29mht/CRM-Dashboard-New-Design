@@ -1,36 +1,30 @@
 import { useState } from 'react';
 import {
-  DollarSign, TrendingUp, BarChart3, Percent, Clock,
-  ArrowUpRight, ArrowDownRight, FileText,
-  ClipboardList, Receipt, ShoppingCart, Sparkles,
+  TrendingUp, BarChart3, Percent, Clock, IndianRupee,
+  ArrowUpRight, ArrowDownRight,
+  CheckCircle2, XCircle, ChevronDown, ChevronRight,
+  Sparkles, Trophy,
 } from 'lucide-react';
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer,
 } from 'recharts';
 import {
   formatCurrency,
   kpiMetrics,
   documentFlowStages,
   quotationVolume,
-  leadsBySource,
-  recentActivities,
+  qualifiedOutcomes,
+  topClients,
 } from '../data/mockData';
+import LeadsMap from './LeadsMap';
 
 // ── Semantic color map ─────────────────────────────────────────────
 const BAR_COLORS = {
-  emerald: { bg: 'bg-emerald-600', text: 'text-emerald-700', light: 'bg-emerald-50' },
-  indigo:  { bg: 'bg-indigo-600',  text: 'text-indigo-700',  light: 'bg-indigo-50' },
-  amber:   { bg: 'bg-amber-500',   text: 'text-amber-700',   light: 'bg-amber-50' },
-  slate:   { bg: 'bg-slate-500',   text: 'text-slate-600',   light: 'bg-slate-50' },
-};
-
-// ── Activity icon map (document events only) ─────────────────────
-const activityIconMap = {
-  quotation: ClipboardList,
-  po: ShoppingCart,
-  so: ShoppingCart,
-  invoice: Receipt,
+  emerald: { bg: 'bg-emerald-600', text: 'text-emerald-700' },
+  indigo:  { bg: 'bg-indigo-600',  text: 'text-indigo-700' },
+  amber:   { bg: 'bg-amber-500',   text: 'text-amber-700' },
+  slate:   { bg: 'bg-slate-500',   text: 'text-slate-600' },
 };
 
 const TIME_RANGES = ['All Time', '1 Month', 'Custom'];
@@ -53,12 +47,12 @@ function ChartTooltip({ active, payload, label, isCurrency }) {
 // ════════════════════════════════════════════════════════════════════
 export default function Dashboard() {
   const [timeRange, setTimeRange] = useState('all');
+  const [expandedOutcome, setExpandedOutcome] = useState(null);
 
   const rangeKey = timeRange === 'custom' ? 'all' : timeRange;
   const metrics = kpiMetrics[rangeKey];
   const flow = documentFlowStages[rangeKey];
   const quoteVol = quotationVolume[rangeKey];
-  const sources = leadsBySource[rangeKey];
   const maxFlowValue = Math.max(...flow.map((s) => s.value));
 
   // Quotation volume summary
@@ -101,27 +95,26 @@ export default function Dashboard() {
 
       {/* ── KPI Stats Row (Hero + 4 cards) ──────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-        {/* HERO — Total Booked Orders (2x width) */}
+        {/* HERO — Total Won Deal Value (2x width) */}
         <div className="lg:col-span-2 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl p-5 shadow-sm border border-emerald-500/30 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-8 translate-x-8" />
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center">
-                <DollarSign size={20} />
+                <IndianRupee size={20} />
               </div>
-              <span className="text-sm font-medium text-emerald-100">Total Booked Orders</span>
+              <span className="text-sm font-medium text-emerald-100">Total Won Deal Value</span>
             </div>
             <div className="text-4xl font-bold tracking-tight mb-1">
-              {formatCurrency(metrics.totalBookedOrders)}
+              {formatCurrency(metrics.totalWonDealValue)}
             </div>
             <div className="flex items-center gap-1 text-sm text-emerald-200">
               <ArrowUpRight size={14} />
-              <span>{metrics.totalBookedChange}</span>
+              <span>{metrics.totalWonChange}</span>
             </div>
           </div>
         </div>
 
-        {/* Open Pipeline */}
         <StatCard
           icon={<TrendingUp size={20} />}
           label="Open Pipeline"
@@ -132,7 +125,6 @@ export default function Dashboard() {
           iconBg="bg-indigo-50"
           iconColor="text-indigo-600"
         />
-        {/* Unbilled Backlog */}
         <StatCard
           icon={<BarChart3 size={20} />}
           label="Unbilled Backlog"
@@ -143,7 +135,6 @@ export default function Dashboard() {
           iconBg="bg-amber-50"
           iconColor="text-amber-600"
         />
-        {/* Quote-to-Order Rate */}
         <StatCard
           icon={<Percent size={20} />}
           label="Quote-to-Order Rate"
@@ -154,21 +145,20 @@ export default function Dashboard() {
           iconBg="bg-slate-100"
           iconColor="text-slate-600"
         />
-        {/* Avg PO Lag Time */}
         <PoLagCard metrics={metrics} />
       </div>
 
-      {/* ── Full-width: Document Flow + Activities ─────────────── */}
+      {/* ── Row 2: Document Flow + Qualified Outcomes ─────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Document Flow Status */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 pb-8">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[15px] font-semibold text-slate-800">Document Flow Status</h2>
             <span className="text-xs text-slate-400 font-medium">
               Total: {formatCurrency(flow.reduce((s, p) => s + p.value, 0))}
             </span>
           </div>
-          <div className="space-y-3.5">
+          <div className="flex flex-col gap-6">
             {flow.map((stage) => {
               const pct = (stage.value / maxFlowValue) * 100;
               const c = BAR_COLORS[stage.color];
@@ -195,29 +185,68 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Document Activities */}
+        {/* Qualified Opportunity Outcomes */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
           <h2 className="text-[15px] font-semibold text-slate-800 mb-4">
-            Recent Document Activities
+            Qualified Opportunity Outcomes
           </h2>
-          <div className="flex-1 overflow-y-auto space-y-0 max-h-[340px] pr-1">
-            {recentActivities.map((a, i) => {
-              const Icon = activityIconMap[a.type] || FileText;
+          <div className="flex-1 overflow-y-auto max-h-[340px] pr-1">
+            {qualifiedOutcomes.map((item, i) => {
+              const isWon = item.status === 'won';
+              const isExpanded = expandedOutcome === i;
               return (
-                <div
-                  key={i}
-                  className="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0"
-                >
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                    <Icon size={14} className="text-slate-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold text-slate-700">{a.employee}</div>
-                    <div className="text-[13px] text-slate-500 leading-snug">{a.action}</div>
-                  </div>
-                  <span className="text-xs text-slate-400 whitespace-nowrap flex-shrink-0 pt-0.5">
-                    {a.time}
-                  </span>
+                <div key={i} className="border-b border-slate-100 last:border-0">
+                  <button
+                    onClick={() => setExpandedOutcome(isExpanded ? null : i)}
+                    className="flex items-center gap-3 py-3 w-full text-left hover:bg-slate-50 transition-colors rounded px-1"
+                  >
+                    {/* Status icon */}
+                    {isWon ? (
+                      <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" />
+                    ) : (
+                      <XCircle size={18} className="text-rose-400 flex-shrink-0" />
+                    )}
+                    {/* Client + value */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-semibold text-slate-700 truncate">
+                        {item.client}
+                      </div>
+                      <div className="text-[12px] text-slate-400">
+                        {formatCurrency(item.value)}
+                      </div>
+                    </div>
+                    {/* Won/Lost badge */}
+                    <span
+                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                        isWon
+                          ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                          : 'text-rose-600 bg-rose-50 border border-rose-200'
+                      }`}
+                    >
+                      {isWon ? 'WON' : 'LOST'}
+                    </span>
+                    {/* Expand chevron */}
+                    {isExpanded ? (
+                      <ChevronDown size={14} className="text-slate-400 flex-shrink-0" />
+                    ) : (
+                      <ChevronRight size={14} className="text-slate-400 flex-shrink-0" />
+                    )}
+                  </button>
+                  {/* Expanded reason */}
+                  {isExpanded && (
+                    <div className="pl-10 pr-4 pb-3">
+                      <div
+                        className={`text-[12px] leading-relaxed p-2.5 rounded-lg ${
+                          isWon ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-700'
+                        }`}
+                      >
+                        <span className="font-semibold">
+                          {isWon ? 'Win Reason: ' : 'Lost Reason: '}
+                        </span>
+                        {item.reason}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -225,18 +254,21 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Charts: Quotation Volume + Leads by Source ────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quotation Volume (Monthly) — Area Chart with Currency Y-Axis */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col h-[340px]">
+      {/* ── Row 3: Quotation Volume + Leads Map ──────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Quotation Volume (Monthly) */}
+        <div className="bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5 flex flex-col h-[340px]">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-[15px] font-semibold text-slate-800">Quotation Volume (Monthly)</h2>
-            <div className="flex items-baseline gap-3">
-              <span className="text-2xl font-bold text-slate-800">{formatCurrency(volLast)}</span>
-              <span className="text-xs text-slate-400">this period</span>
+            <div className="flex items-center gap-2">
+              <span className="text-3xl font-bold text-slate-900 tracking-tight">{formatCurrency(volLast)}</span>
+              <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">+12%</span>
             </div>
           </div>
-          <p className="text-xs text-slate-400 mb-4">{formatCurrency(volTotal)} total over {quoteVol.length} periods</p>
+          <p className="flex items-center gap-1.5 text-xs text-slate-400 mb-4">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0" />
+            {formatCurrency(volTotal)} total over {quoteVol.length} periods
+          </p>
           <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={quoteVol} margin={{ top: 4, right: 4, bottom: 0, left: -10 }}>
@@ -276,45 +308,53 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Leads by Source — Vertical Bar Chart */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col h-[340px]">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-[15px] font-semibold text-slate-800">Leads by Source</h2>
-            <span className="text-xs text-slate-400 font-medium px-2 py-1 bg-slate-50 rounded">
-              Earning Budget
-            </span>
-          </div>
-          <p className="text-xs text-slate-400 mb-4">
-            Top: {sources[0]?.label} at {formatCurrency(sources[0]?.value)}
-          </p>
-          <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={sources} margin={{ top: 4, right: 4, bottom: 0, left: -20 }} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis
-                  dataKey="label"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  dy={8}
-                  interval={0}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  tickFormatter={(v) => formatCurrency(v)}
-                  width={48}
-                />
-                <Tooltip content={<ChartTooltip isCurrency />} cursor={{ fill: '#f8fafc' }} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {sources.map((entry, idx) => (
-                    <Cell key={idx} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        {/* Leads Map — India */}
+        <LeadsMap />
+      </div>
+
+      {/* ── Row 4: Top 5 Clients Leaderboard ───────────────── */}
+      <div className="bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5">
+        <div className="flex items-center gap-2 mb-5">
+          <Trophy size={16} className="text-amber-500" />
+          <h2 className="text-[15px] font-semibold text-slate-800">Top 5 Clients by Invoiced Value</h2>
+        </div>
+        <div className="space-y-3">
+          {topClients.map((client, i) => {
+            const maxInvoiced = topClients[0].invoiced;
+            const pct = (client.invoiced / maxInvoiced) * 100;
+            return (
+              <div
+                key={i}
+                className="flex items-center gap-4 group"
+              >
+                {/* Rank badge */}
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-500 transition-colors">
+                  <span className="text-xs font-bold text-slate-500 group-hover:text-white transition-colors">
+                    {i + 1}
+                  </span>
+                </div>
+                {/* Client info + value */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between mb-1.5">
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-slate-700 truncate">{client.name}</div>
+                      <div className="text-[11px] text-slate-400">{client.projects} projects</div>
+                    </div>
+                    <span className="text-[14px] font-bold text-slate-800 flex-shrink-0 ml-4">
+                      {formatCurrency(client.invoiced)}
+                    </span>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-violet-500/70 rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
