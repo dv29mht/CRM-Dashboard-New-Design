@@ -3,11 +3,13 @@ import {
   TrendingUp, BarChart3, Percent, Clock, IndianRupee,
   ArrowUpRight, ArrowDownRight,
   CheckCircle2, XCircle, ChevronDown, ChevronRight,
-  Sparkles, Trophy,
+  Sparkles, Trophy, Zap, Target, AlertTriangle, Activity,
 } from 'lucide-react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
+  AreaChart, Area, BarChart, Bar, LineChart, Line,
+  PieChart, Pie,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell,
 } from 'recharts';
 import {
   formatCurrency,
@@ -16,6 +18,12 @@ import {
   quotationVolume,
   qualifiedOutcomes,
   topClients,
+  getTopProducts,
+  getRevenueByScope,
+  getQuoteVelocity,
+  getStalePipeline,
+  getStrikeRate,
+  getAovTrend,
 } from '../data/mockData';
 import LeadsMap from './LeadsMap';
 
@@ -312,49 +320,269 @@ export default function Dashboard() {
         <LeadsMap />
       </div>
 
-      {/* ── Row 4: Top 5 Clients Leaderboard ───────────────── */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-5">
-        <div className="flex items-center gap-2 mb-5">
-          <Trophy size={16} className="text-amber-500" />
-          <h2 className="text-[15px] font-semibold text-slate-800">Top 5 Clients by Invoiced Value</h2>
+      {/* ── Revenue Intelligence ─────────────────────────────── */}
+      <RevenueIntelligence />
+    </div>
+  );
+}
+
+// ── Revenue Intelligence Section ──────────────────────────────────
+const PRODUCT_COLORS = ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'];
+const SCOPE_COLORS = ['#0d9488', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6'];
+
+function RevenueIntelligence() {
+  const strikeRate = getStrikeRate();
+  const velocity = getQuoteVelocity();
+  const stalePipeline = getStalePipeline();
+  const topProducts = getTopProducts();
+  const scopeData = getRevenueByScope();
+  const aovTrend = getAovTrend();
+  const scopeTotal = scopeData.reduce((s, d) => s + d.value, 0);
+
+  // Strike rate ring
+  const ringRadius = 36;
+  const ringCircumference = 2 * Math.PI * ringRadius;
+  const ringOffset = ringCircumference - (strikeRate / 100) * ringCircumference;
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Activity size={18} className="text-violet-600" />
+        <h2 className="text-base font-semibold text-slate-800">Revenue Intelligence</h2>
+      </div>
+
+      {/* Row 1: 3 small cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        {/* Strike Rate */}
+        <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl border border-indigo-100 shadow-sm p-5 flex items-center gap-5">
+          <div className="flex-shrink-0">
+            <svg width="88" height="88" viewBox="0 0 88 88">
+              <defs>
+                <linearGradient id="winRateGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#4F46E5" />
+                  <stop offset="100%" stopColor="#7C3AED" />
+                </linearGradient>
+              </defs>
+              <circle cx="44" cy="44" r={ringRadius} fill="none" stroke="#e0e7ff" strokeWidth="7" />
+              <circle
+                cx="44" cy="44" r={ringRadius} fill="none"
+                stroke="url(#winRateGrad)" strokeWidth="7" strokeLinecap="round"
+                strokeDasharray={ringCircumference}
+                strokeDashoffset={ringOffset}
+                transform="rotate(-90 44 44)"
+              />
+              <text x="44" y="41" textAnchor="middle" style={{ fontSize: 18, fontWeight: 700, fill: '#312e81' }}>
+                {strikeRate}%
+              </text>
+              <text x="44" y="55" textAnchor="middle" style={{ fontSize: 10, fill: '#6366f1' }}>
+                Win Rate
+              </text>
+            </svg>
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Target size={16} className="text-indigo-600" />
+              <span className="text-sm font-semibold text-indigo-900">Quote Win Rate</span>
+            </div>
+            <p className="text-xs text-indigo-400 leading-relaxed">
+              {strikeRate >= 60 ? 'Strong conversion — keep it up!' : 'Below 60% — review lost reasons.'}
+            </p>
+          </div>
         </div>
-        <div className="space-y-3">
-          {topClients.map((client, i) => {
-            const maxInvoiced = topClients[0].invoiced;
-            const pct = (client.invoiced / maxInvoiced) * 100;
-            return (
-              <div
-                key={i}
-                className="flex items-center gap-4 group"
-              >
-                {/* Rank badge */}
-                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-500 transition-colors">
-                  <span className="text-xs font-bold text-slate-500 group-hover:text-white transition-colors">
-                    {i + 1}
-                  </span>
-                </div>
-                {/* Client info + value */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-1.5">
-                    <div className="min-w-0">
-                      <div className="text-[13px] font-semibold text-slate-700 truncate">{client.name}</div>
-                      <div className="text-[11px] text-slate-400">{client.projects} projects</div>
+
+        {/* Avg Approval Time */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-9 h-9 rounded-lg bg-sky-50 flex items-center justify-center text-sky-600">
+              <Zap size={20} />
+            </div>
+            <span className="text-sm font-medium text-slate-600">Avg Approval Time</span>
+          </div>
+          <div className="text-3xl font-bold text-slate-800 mb-1">
+            {velocity} <span className="text-sm font-medium text-slate-500">Days</span>
+          </div>
+          <p className="text-xs text-slate-400">
+            {velocity <= 7 ? 'Lightning-fast approvals' : velocity <= 14 ? 'Healthy approval cycle' : 'Consider follow-up automation'}
+          </p>
+        </div>
+
+        {/* Ghosting / Stale Pipeline */}
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100/60 rounded-xl border border-amber-200 shadow-sm p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-200/60 flex items-center justify-center text-amber-700">
+              <AlertTriangle size={20} />
+            </div>
+            <span className="text-sm font-medium text-amber-800">Stale Pipeline</span>
+          </div>
+          <div className="text-3xl font-bold text-amber-700 mb-1">
+            {formatCurrency(stalePipeline)}
+          </div>
+          <p className="text-xs text-amber-600/80">
+            Pending &gt;14 days — {stalePipeline > 0 ? 'needs follow-up' : 'all clear!'}
+          </p>
+        </div>
+      </div>
+
+      {/* Row 2: Top Products + Revenue by Scope (Premium) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-96 mb-6">
+        {/* Top Products by Revenue — Vertical Bar */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
+          <h3 className="text-lg font-bold tracking-tight text-slate-800 mb-6">Top Products by Revenue</h3>
+          <div className="flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topProducts} margin={{ top: 4, right: 8, bottom: 28, left: -10 }}>
+                <defs>
+                  <linearGradient id="barIndigo" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#4F46E5" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0.85} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false} tickLine={false}
+                  tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
+                  interval={0}
+                  angle={-18}
+                  textAnchor="end"
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false} tickLine={false}
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  tickFormatter={(v) => formatCurrency(v)}
+                  width={54}
+                />
+                <Tooltip content={<ChartTooltip isCurrency />} cursor={{ fill: 'rgba(79,70,229,0.04)' }} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={32} fill="url(#barIndigo)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Revenue by Scope of Work — Thick Donut */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
+          <h3 className="text-lg font-bold tracking-tight text-slate-800 mb-6">Revenue by Scope of Work</h3>
+          <div className="flex-1 min-h-0 flex items-center">
+            <div className="w-[45%] h-full relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={scopeData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="60%"
+                    outerRadius="80%"
+                    paddingAngle={3}
+                    strokeWidth={0}
+                  >
+                    {scopeData.map((_, i) => (
+                      <Cell key={i} fill={SCOPE_COLORS[i % SCOPE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<ChartTooltip isCurrency />} />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center label */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xl font-bold text-slate-800 tracking-tight">{formatCurrency(scopeTotal)}</span>
+                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Total</span>
+              </div>
+            </div>
+            <div className="w-[55%] pl-5 space-y-3">
+              {scopeData.map((item, i) => (
+                <div key={item.name} className="flex items-center gap-3">
+                  <span
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: SCOPE_COLORS[i % SCOPE_COLORS.length] }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium text-slate-700 truncate">{item.name}</div>
+                    <div className="text-xs text-slate-400">
+                      {formatCurrency(item.value)} · {((item.value / scopeTotal) * 100).toFixed(0)}%
                     </div>
-                    <span className="text-[14px] font-bold text-slate-800 flex-shrink-0 ml-4">
-                      {formatCurrency(client.invoiced)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 3: AOV Trend + Top 5 Clients side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* AOV Trend */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 h-[360px] flex flex-col">
+          <h3 className="text-lg font-bold tracking-tight text-slate-800 mb-1">AOV Trend</h3>
+          <p className="text-xs text-slate-400 mb-5">Average Order Value per month</p>
+          <div className="flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={aovTrend} margin={{ top: 4, right: 12, bottom: 0, left: -10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false} tickLine={false}
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                  dy={8}
+                />
+                <YAxis
+                  axisLine={false} tickLine={false}
+                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  tickFormatter={(v) => formatCurrency(v)}
+                  width={52}
+                />
+                <Tooltip content={<ChartTooltip isCurrency />} cursor={{ stroke: '#e2e8f0' }} />
+                <Line
+                  type="monotone" dataKey="aov"
+                  stroke="#8b5cf6" strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#8b5cf6', stroke: '#fff', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Top 5 Clients Leaderboard */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 h-[360px] flex flex-col">
+          <div className="flex items-center gap-2 mb-5">
+            <Trophy size={16} className="text-amber-500" />
+            <h3 className="text-lg font-bold tracking-tight text-slate-800">Top 5 Clients</h3>
+          </div>
+          <div className="flex-1 space-y-3 overflow-y-auto">
+            {topClients.map((client, i) => {
+              const maxInvoiced = topClients[0].invoiced;
+              const pct = (client.invoiced / maxInvoiced) * 100;
+              return (
+                <div key={i} className="flex items-center gap-4 group">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-500 transition-colors">
+                    <span className="text-xs font-bold text-slate-500 group-hover:text-white transition-colors">
+                      {i + 1}
                     </span>
                   </div>
-                  {/* Progress bar */}
-                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-violet-500/70 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-1.5">
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-slate-700 truncate">{client.name}</div>
+                        <div className="text-[11px] text-slate-400">{client.projects} projects</div>
+                      </div>
+                      <span className="text-[14px] font-bold text-slate-800 flex-shrink-0 ml-4">
+                        {formatCurrency(client.invoiced)}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-violet-500/70 rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

@@ -138,6 +138,153 @@ export const topClients = [
   { name: 'Manufacturing Solutions', invoiced: 53_00_000,   projects: 3 },
 ];
 
+// ── Quotations (Real Schema — Product + Scope of Work) ────────────
+export const quotations = [
+  {
+    id: 'QTN251200002',
+    status: 'Accepted',
+    created_at: '2025-10-01',
+    accepted_at: '2025-10-05',
+    currency: 'INR',
+    items: [
+      { product: 'In-House Product', scope: 'Custom Software Development', total_amount: 120000 },
+      { product: 'Add-Ons', scope: 'API Integration', total_amount: 30000 },
+    ],
+  },
+  {
+    id: 'QTN251200003',
+    status: 'Sent',
+    created_at: '2025-01-15',
+    currency: 'INR',
+    items: [
+      { product: 'Product Dahlia India', scope: 'Wireframing', total_amount: 45000 },
+    ],
+  },
+  {
+    id: 'QTN251200004',
+    status: 'Accepted',
+    created_at: '2025-11-10',
+    accepted_at: '2025-11-18',
+    currency: 'INR',
+    items: [
+      { product: 'In-House Product', scope: 'Custom Software Development', total_amount: 185000 },
+      { product: 'Multi Purpose', scope: 'Testing & QA', total_amount: 55000 },
+    ],
+  },
+  {
+    id: 'QTN251200005',
+    status: 'Sent',
+    created_at: '2025-01-28',
+    currency: 'INR',
+    items: [
+      { product: 'Dismantle Modified', scope: 'Twin Dismantle', total_amount: 95000 },
+    ],
+  },
+  {
+    id: 'QTN251200006',
+    status: 'Accepted',
+    created_at: '2025-12-05',
+    accepted_at: '2025-12-09',
+    currency: 'INR',
+    items: [
+      { product: 'Add-Ons', scope: 'API Integration', total_amount: 42000 },
+      { product: 'In-House Product', scope: 'Testing & QA', total_amount: 78000 },
+    ],
+  },
+  {
+    id: 'QTN251200007',
+    status: 'Accepted',
+    created_at: '2026-01-12',
+    accepted_at: '2026-01-20',
+    currency: 'INR',
+    items: [
+      { product: 'In-House Product', scope: 'Custom Software Development', total_amount: 250000 },
+      { product: 'Multi Purpose', scope: 'Wireframing', total_amount: 35000 },
+      { product: 'Product Dahlia India', scope: 'API Integration', total_amount: 60000 },
+    ],
+  },
+];
+
+// ── Computed Revenue Intelligence Metrics ─────────────────────────
+const TODAY = new Date('2026-02-17');
+
+/** A. Top Products by Revenue — aggregate total_amount by product from Accepted quotes */
+export function getTopProducts() {
+  const map = {};
+  quotations
+    .filter((q) => q.status === 'Accepted')
+    .forEach((q) =>
+      q.items.forEach((item) => {
+        map[item.product] = (map[item.product] || 0) + item.total_amount;
+      }),
+    );
+  return Object.entries(map)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+}
+
+/** A2. Revenue by Scope of Work — aggregate total_amount by scope from Accepted quotes */
+export function getRevenueByScope() {
+  const map = {};
+  quotations
+    .filter((q) => q.status === 'Accepted')
+    .forEach((q) =>
+      q.items.forEach((item) => {
+        map[item.scope] = (map[item.scope] || 0) + item.total_amount;
+      }),
+    );
+  return Object.entries(map)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+}
+
+/** B. Quote Velocity — avg days between created_at → accepted_at */
+export function getQuoteVelocity() {
+  const accepted = quotations.filter((q) => q.status === 'Accepted' && q.accepted_at);
+  if (!accepted.length) return 0;
+  const total = accepted.reduce((sum, q) => {
+    const days = (new Date(q.accepted_at) - new Date(q.created_at)) / 86400000;
+    return sum + days;
+  }, 0);
+  return +(total / accepted.length).toFixed(1);
+}
+
+/** C. Stale Pipeline — total_amount of Sent quotes older than 14 days */
+export function getStalePipeline() {
+  const cutoff = new Date(TODAY);
+  cutoff.setDate(cutoff.getDate() - 14);
+  return quotations
+    .filter((q) => q.status === 'Sent' && new Date(q.created_at) < cutoff)
+    .reduce((sum, q) => sum + q.items.reduce((s, i) => s + i.total_amount, 0), 0);
+}
+
+/** D. Strike Rate — (Accepted / (Accepted + Sent)) * 100 */
+export function getStrikeRate() {
+  const accepted = quotations.filter((q) => q.status === 'Accepted').length;
+  const total = quotations.filter((q) => q.status === 'Accepted' || q.status === 'Sent').length;
+  return total ? +((accepted / total) * 100).toFixed(1) : 0;
+}
+
+/** E. AOV Trend — Average Order Value per month */
+export function getAovTrend() {
+  const byMonth = {};
+  quotations.forEach((q) => {
+    const d = new Date(q.created_at);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (!byMonth[key]) byMonth[key] = { total: 0, count: 0 };
+    byMonth[key].total += q.items.reduce((s, i) => s + i.total_amount, 0);
+    byMonth[key].count += 1;
+  });
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return Object.entries(byMonth)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, { total, count }]) => {
+      const [, m] = key.split('-');
+      return { month: months[parseInt(m, 10) - 1], aov: Math.round(total / count) };
+    });
+}
+
 // ── Sidebar Menu Structure ─────────────────────────────────────────
 export const sidebarMenu = [
   { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', active: true },
