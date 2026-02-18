@@ -19,7 +19,7 @@ import {
   qualifiedOutcomes,
   topClients,
   getTopProducts,
-  getRevenueByScope,
+  getRevenueComposition,
   getQuoteVelocity,
   getStalePipeline,
   getStrikeRate,
@@ -46,6 +46,22 @@ function ChartTooltip({ active, payload, label, isCurrency }) {
       <span className="font-semibold">
         {isCurrency ? formatCurrency(payload[0].value) : payload[0].value}
       </span>
+    </div>
+  );
+}
+
+// ── Double donut tooltip ──────────────────────────────────────────
+function DonutTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const entry = payload[0];
+  const isInner = INNER_COLORS.includes(entry.payload?.fill);
+  const label = isInner ? 'Product' : 'Scope';
+  return (
+    <div className="bg-slate-800 text-white text-xs px-3.5 py-2 rounded-lg shadow-lg">
+      <span className="text-slate-400">{label}: </span>
+      <span className="font-semibold">{entry.name}</span>
+      <span className="text-slate-400"> — </span>
+      <span className="font-semibold">{formatCurrency(entry.value)}</span>
     </div>
   );
 }
@@ -328,16 +344,16 @@ export default function Dashboard() {
 
 // ── Revenue Intelligence Section ──────────────────────────────────
 const PRODUCT_COLORS = ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'];
-const SCOPE_COLORS = ['#0d9488', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6'];
+const INNER_COLORS = ['#4338ca', '#6366f1', '#818cf8', '#a5b4fc'];
+const OUTER_COLORS = ['#10b981', '#f59e0b', '#06b6d4', '#ec4899', '#8b5cf6'];
 
 function RevenueIntelligence() {
   const strikeRate = getStrikeRate();
   const velocity = getQuoteVelocity();
   const stalePipeline = getStalePipeline();
   const topProducts = getTopProducts();
-  const scopeData = getRevenueByScope();
+  const { products: ringProducts, scopes: ringScopes } = getRevenueComposition();
   const aovTrend = getAovTrend();
-  const scopeTotal = scopeData.reduce((s, d) => s + d.value, 0);
 
   // Strike rate ring
   const ringRadius = 36;
@@ -423,27 +439,27 @@ function RevenueIntelligence() {
         </div>
       </div>
 
-      {/* Row 2: Top Products + Revenue by Scope (Premium) */}
+      {/* Row 2: Top Products + Revenue Source Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-96 mb-6">
-        {/* Top Products by Revenue — Vertical Bar */}
+        {/* Top Products by Revenue — Gradient Bar with background track */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
           <h3 className="text-lg font-bold tracking-tight text-slate-800 mb-6">Top Products by Revenue</h3>
           <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topProducts} margin={{ top: 4, right: 8, bottom: 28, left: -10 }}>
                 <defs>
-                  <linearGradient id="barIndigo" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#4F46E5" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0.85} />
+                  <linearGradient id="barIndigoGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366F1" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#818CF8" stopOpacity={0.9} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis
                   dataKey="name"
                   axisLine={false} tickLine={false}
-                  tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
+                  tick={{ fontSize: 12, fill: '#64748b' }}
                   interval={0}
-                  angle={-18}
+                  angle={-15}
                   textAnchor="end"
                   dy={10}
                 />
@@ -453,59 +469,80 @@ function RevenueIntelligence() {
                   tickFormatter={(v) => formatCurrency(v)}
                   width={54}
                 />
-                <Tooltip content={<ChartTooltip isCurrency />} cursor={{ fill: 'rgba(79,70,229,0.04)' }} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={32} fill="url(#barIndigo)" />
+                <Tooltip content={<ChartTooltip isCurrency />} cursor={{ fill: 'rgba(99,102,241,0.04)' }} />
+                {/* Background track bar */}
+                <Bar dataKey="max" radius={[8, 8, 8, 8]} barSize={40} fill="#f1f5f9" isAnimationActive={false} />
+                {/* Data bar */}
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} barSize={40} fill="url(#barIndigoGrad)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Revenue by Scope of Work — Thick Donut */}
+        {/* Revenue Composition — Double Donut */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col">
-          <h3 className="text-lg font-bold tracking-tight text-slate-800 mb-6">Revenue by Scope of Work</h3>
+          <h3 className="text-lg font-bold tracking-tight text-slate-800 mb-4">Revenue Composition (Product vs Scope)</h3>
           <div className="flex-1 min-h-0 flex items-center">
-            <div className="w-[45%] h-full relative">
+            <div className="w-[55%] h-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
+                  {/* Inner ring — Products */}
                   <Pie
-                    data={scopeData}
+                    data={ringProducts}
                     dataKey="value"
                     nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="60%"
-                    outerRadius="80%"
-                    paddingAngle={3}
+                    cx="50%" cy="50%"
+                    outerRadius={60}
+                    paddingAngle={2}
                     strokeWidth={0}
                   >
-                    {scopeData.map((_, i) => (
-                      <Cell key={i} fill={SCOPE_COLORS[i % SCOPE_COLORS.length]} />
+                    {ringProducts.map((_, i) => (
+                      <Cell key={i} fill={INNER_COLORS[i % INNER_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip content={<ChartTooltip isCurrency />} />
+                  {/* Outer ring — Scopes */}
+                  <Pie
+                    data={ringScopes}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%" cy="50%"
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    strokeWidth={0}
+                  >
+                    {ringScopes.map((_, i) => (
+                      <Cell key={i} fill={OUTER_COLORS[i % OUTER_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<DonutTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-              {/* Center label */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-xl font-bold text-slate-800 tracking-tight">{formatCurrency(scopeTotal)}</span>
-                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Total</span>
-              </div>
             </div>
-            <div className="w-[55%] pl-5 space-y-3">
-              {scopeData.map((item, i) => (
-                <div key={item.name} className="flex items-center gap-3">
-                  <span
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: SCOPE_COLORS[i % SCOPE_COLORS.length] }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium text-slate-700 truncate">{item.name}</div>
-                    <div className="text-xs text-slate-400">
-                      {formatCurrency(item.value)} · {((item.value / scopeTotal) * 100).toFixed(0)}%
+            {/* Vertical legend */}
+            <div className="w-[45%] pl-3 space-y-4">
+              <div>
+                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Products</div>
+                <div className="space-y-1.5">
+                  {ringProducts.map((item, i) => (
+                    <div key={item.name} className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: INNER_COLORS[i % INNER_COLORS.length] }} />
+                      <span className="text-[11px] font-medium text-slate-600 truncate">{item.name}</span>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div>
+                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Scopes</div>
+                <div className="space-y-1.5">
+                  {ringScopes.map((item, i) => (
+                    <div key={item.name} className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: OUTER_COLORS[i % OUTER_COLORS.length] }} />
+                      <span className="text-[11px] font-medium text-slate-600 truncate">{item.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

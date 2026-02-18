@@ -218,25 +218,31 @@ export function getTopProducts() {
         map[item.product] = (map[item.product] || 0) + item.total_amount;
       }),
     );
-  return Object.entries(map)
+  const sorted = Object.entries(map)
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
+  const maxVal = sorted[0]?.value || 0;
+  return sorted.map((item) => ({ ...item, max: maxVal }));
 }
 
-/** A2. Revenue by Scope of Work — aggregate total_amount by scope from Accepted quotes */
-export function getRevenueByScope() {
-  const map = {};
+/** A2. Revenue Composition — inner (products) + outer (scopes) ring data */
+export function getRevenueComposition() {
+  const prodMap = {};
+  const scopeMap = {};
   quotations
     .filter((q) => q.status === 'Accepted')
     .forEach((q) =>
       q.items.forEach((item) => {
-        map[item.scope] = (map[item.scope] || 0) + item.total_amount;
+        prodMap[item.product] = (prodMap[item.product] || 0) + item.total_amount;
+        scopeMap[item.scope] = (scopeMap[item.scope] || 0) + item.total_amount;
       }),
     );
-  return Object.entries(map)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
+  const toSorted = (map) =>
+    Object.entries(map)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  return { products: toSorted(prodMap), scopes: toSorted(scopeMap) };
 }
 
 /** B. Quote Velocity — avg days between created_at → accepted_at */
